@@ -1,0 +1,44 @@
+services:
+  web-app:
+    build:
+      context: .
+    container_name: subscriptions
+    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - .:/contapp
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: psgr
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - '5432:5432'
+
+  telegram_bot:
+    build:
+      context: ./TgBot
+      dockerfile: Dockerfilebot
+    container_name: telegram_bot
+    restart: always
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+
+volumes:
+  postgres_data:
+

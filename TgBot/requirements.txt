@@ -1,0 +1,5 @@
+pyTelegramBotAPI
+sqlalchemy==2.0.30
+psycopg2-binary
+python-dotenv
+requests

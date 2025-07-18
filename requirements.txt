@@ -1,0 +1,8 @@
+Django==4.2.3
+djangorestframework
+psycopg2-binary
+python-dotenv
+sqlalchemy
+python-telegram-bot
+requests
+djangorestframework-simplejwt
