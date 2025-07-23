@@ -1,28 +1,35 @@
 from django.shortcuts import render
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
 from .models import Order
 from .serializers import OrderSerializer
 from products.utils import notify_telegram
-from django.contrib.auth import get_user_model
 
-
-User = get_user_model()
 
 class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.all()
+    # queryset = Order.objects.all()
     serializer_class = OrderSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return Order.objects.none()
+        if user.is_staff:
+            return Order.objects.all()
+        return Order.objects.filter(user=user)
+
 
     def perform_create(self, serializer):
-        user_id = self.request.headers.get('X-User-ID')
-        if not user_id:
-            raise ValueError("Не передан X-User-ID")
+        user = self.request.user
 
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            raise ValueError("Пользователь не найден")
+        if not user or not user.is_authenticated:
+            raise ValueError("Пользователь не авторизован")
 
         order = serializer.save(user=user)
         notify_telegram(user)
+
+
 
 

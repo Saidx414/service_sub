@@ -5,4 +5,3 @@ python-dotenv
 sqlalchemy
 python-telegram-bot
 requests
-djangorestframework-simplejwt

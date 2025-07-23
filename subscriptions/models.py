@@ -17,6 +17,6 @@ class UserSubscription(models.Model):
     is_active = models.BooleanField(default=True)
 
 class CustomUser(AbstractUser):
-    phone = models.CharField(max_length=15, unique=True, null=True, blank=True)
-    telegram_id = models.CharField(max_length=100, null=True, blank=True)
+    phone = models.CharField(max_length=15, unique=True, blank=True, default='')
+    telegram_id = models.CharField(max_length=100, blank=True, default='')
 

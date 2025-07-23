@@ -1,27 +1,30 @@
 from django.http import JsonResponse
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.exceptions import AuthenticationFailed
+
+
 from subscriptions.models import UserSubscription
-from django.contrib.auth import get_user_model
 
-
-User = get_user_model()
 
 class CheckSubscriptionMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
-
+        self.basic_auth = BasicAuthentication()
 
     def __call__(self, request):
         path = request.path
+
         if path.startswith('/api/orders/'):
-            user_id = request.headers.get('X-User-ID')
-
-            if not user_id:
-                return JsonResponse({'detail': 'Не передан X-User-ID'}, status=400)
-
             try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                return JsonResponse({'detail': 'Пользователь не найден'}, status=404)
+                auth_result = self.basic_auth.authenticate(request)
+                if auth_result is None:
+                    return JsonResponse({'detail': 'Пользователь не авторизован'}, status=401)
+
+                user, auth = auth_result
+                request.user = user
+
+            except AuthenticationFailed:
+                return JsonResponse({'detail': 'Неверные учётные данные'}, status=401)
 
             try:
                 subscription = UserSubscription.objects.get(user=user)

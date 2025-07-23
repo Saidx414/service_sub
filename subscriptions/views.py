@@ -1,35 +1,31 @@
 from django.shortcuts import render
+from rest_framework.response import Response
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from .models import Tariff, UserSubscription
 from .serializers import TariffSerializer, UserSubscriptionSerializer
 from django.contrib.auth import get_user_model
+from .sub_permissions import IsAdminOrAuthenticated
+from rest_framework import status
 
-
-User = get_user_model()
 
 class TariffViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tariff.objects.all()
     serializer_class = TariffSerializer
+    # permission_classes = (IsAuthenticatedOrReadOnly)
+
 
 class UserSubscriptionViewSet(viewsets.ModelViewSet):
+    # queryset = UserSubscription.objects.all()
+    permission_classes = [IsAdminOrAuthenticated]
     serializer_class = UserSubscriptionSerializer
-    queryset = UserSubscription.objects.all()
 
     def get_queryset(self):
-        user_id = self.request.headers.get("X-User-ID")
-        if not user_id:
+        user = self.request.user
+        if not user or not user.is_authenticated:
             return UserSubscription.objects.none()
-        return UserSubscription.objects.filter(user_id=user_id)
 
-    def perform_create(self, serializer):
-        user_id = self.request.headers.get("X-User-ID")
-        user = User.objects.get(id=user_id)
-        serializer.save(user=user)
-
-    def perform_update(self, serializer):
-        serializer.save()
-
-    def perform_destroy(self, instance):
-        instance.is_active = False
-        instance.save()
+        if user.is_staff:
+            return UserSubscription.objects.all()
+        return UserSubscription.objects.filter(user=user)
 

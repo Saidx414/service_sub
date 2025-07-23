@@ -1,6 +1,7 @@
 import os
 import requests
-
+from dotenv import load_dotenv
+load_dotenv()
 
 def notify_telegram(user):
     if user.telegram_id:
@@ -16,4 +17,3 @@ def notify_telegram(user):
         }
 
         response = requests.post(url, data=data)
-
